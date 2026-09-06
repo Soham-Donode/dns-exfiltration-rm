@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Datasets and Large captures
+*.pcap
+*.pcapng
+*.cap
+datasets/*.pcap
+datasets/*.pcapng
+datasets/*.cap
+datasets/*.tar.gz
+datasets/*.zip
+
+# Model Weights
+models/*.pkl
+models/*.joblib
+models/*.pt
+models/*.pth
+models/*.bin
+models/*.onnx
+models/*.h5
+
+# OS & IDE
+.DS_Store
+.vscode/
+.idea/
