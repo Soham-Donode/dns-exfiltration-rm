@@ -1,0 +1,60 @@
+# =====================================================================
+# DNS Exfiltration Detection Configuration
+# =====================================================================
+
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  models_dir: "models"
+  tranco_url: "https://tranco-list.eu/top-1m.csv.zip"
+  tranco_file: "data/raw/top-1m.csv"
+  cic_bell_dir: "data/raw/cic_bell"
+  features_dataset_csv: "data/processed/dns_features.csv"
+  model_output_path: "models/dns_exfil_detector.joblib"
+
+simulation:
+  target_domain: "tunnel.example.com"
+  dns_server: "127.0.0.1"
+  dns_port: 53
+  query_types:
+    - "A"
+    - "TXT"
+    - "AAAA"
+    - "CNAME"
+  encodings:
+    - "base32"
+    - "base64"
+    - "hex"
+  max_subdomain_label_len: 63
+  packet_delay_seconds: 0.2
+  jitter_range: [0.05, 0.3]
+
+capture:
+  interface: "lo"
+  bpf_filter: "udp port 53"
+  packet_count: 1000
+  timeout_seconds: 60
+  output_pcap: "data/raw/live_capture.pcap"
+
+features:
+  calculate_entropy: true
+  calculate_ratios: true
+  calculate_frequencies: true
+  ngram_range: [2, 3]
+
+training:
+  algorithm: "random_forest"  # Options: random_forest, xgboost, lightgbm
+  test_size: 0.2
+  random_state: 42
+  cross_validation_folds: 5
+  hyperparameters:
+    random_forest:
+      n_estimators: 150
+      max_depth: 20
+      min_samples_split: 5
+      n_jobs: -1
+    xgboost:
+      n_estimators: 150
+      max_depth: 8
+      learning_rate: 0.1
+      eval_metric: "logloss"
