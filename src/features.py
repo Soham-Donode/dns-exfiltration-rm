@@ -15,17 +15,64 @@ from pathlib import Path
 import pandas as pd
 
 
+def shannon_entropy(label: str) -> float:
+    """Calculate Shannon entropy in bits for a DNS label or query string."""
+    if not label:
+        return 0.0
+    counts = Counter(label)
+    length = len(label)
+    return -sum((count / length) * math.log2(count / length) for count in counts.values())
+
+
 def compute_entropy(text: str) -> float:
     """Calculate Shannon entropy of a given string: H(X) = -sum(p(x) * log2(p(x)))."""
-    if not text:
-        return 0.0
-    length = len(text)
-    counts = Counter(text)
-    entropy = 0.0
-    for count in counts.values():
-        p = count / length
-        entropy -= p * math.log2(p)
-    return round(entropy, 4)
+    return round(shannon_entropy(text), 4)
+
+
+def vowel_digit_ratio(label: str) -> tuple[float, float]:
+    """Return the vowel and digit ratios for a DNS label."""
+    vowels = set("aeiou")
+    length = len(label) or 1
+    vowel_count = sum(char.lower() in vowels for char in label)
+    digit_count = sum(char.isdigit() for char in label)
+    return vowel_count / length, digit_count / length
+
+
+def calculate_query_frequency(
+    records: pd.DataFrame,
+    domain_column: str = "qname",
+    timestamp_column: str = "timestamp",
+    window: str = "60s",
+    rate_unit: str = "minute",
+) -> pd.DataFrame:
+    """Add a per-domain rolling query rate to DNS records.
+
+    ``timestamp`` may contain Unix seconds or datetime-like values. The result
+    is sorted by domain and time, and the current query is included in its
+    rolling window. ``rate_unit`` may be ``second`` or ``minute``.
+    """
+    if domain_column not in records or timestamp_column not in records:
+        raise KeyError(f"records must contain {domain_column!r} and {timestamp_column!r}")
+    if rate_unit not in {"second", "minute"}:
+        raise ValueError("rate_unit must be 'second' or 'minute'")
+
+    result = records.copy()
+    timestamps = result[timestamp_column]
+    if pd.api.types.is_numeric_dtype(timestamps):
+        result[timestamp_column] = pd.to_datetime(timestamps, unit="s")
+    else:
+        result[timestamp_column] = pd.to_datetime(timestamps)
+    result = result.sort_values([domain_column, timestamp_column]).reset_index(drop=True)
+
+    window_seconds = pd.Timedelta(window).total_seconds()
+    divisor = 60.0 if rate_unit == "minute" else 1.0
+    rates = []
+    for _, group in result.groupby(domain_column, sort=False):
+        time_index = group.set_index(timestamp_column).index
+        counts = pd.Series(1.0, index=time_index).rolling(window).sum()
+        rates.extend((counts.to_numpy() / (window_seconds / divisor)).tolist())
+    result[f"queries_per_{rate_unit}"] = rates
+    return result
 
 
 def split_domain_components(fqdn: str) -> Dict[str, str]:
