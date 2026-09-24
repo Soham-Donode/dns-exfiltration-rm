@@ -158,6 +158,12 @@ def main():
     parser.add_argument("--file", help="File whose content to exfiltrate")
     parser.add_argument("--pcap-out", help="Save generated packets to PCAP file")
     parser.add_argument("--dry-run", action="store_true", help="Print queries without sending network packets")
+    parser.add_argument(
+        "--mode",
+        choices=["burst", "low-and-slow"],
+        default="burst",
+        help="Transmission profile: burst sends queries back-to-back; low-and-slow waits 30 seconds",
+    )
 
     args = parser.parse_args()
 
@@ -167,11 +173,14 @@ def main():
     elif args.file:
         payload = Path(args.file).read_bytes()
 
+    delay = 30.0 if args.mode == "low-and-slow" else 0.0
     sim = DNSExfiltrationSimulator(
         target_domain=args.domain,
         dns_server=args.server,
         dns_port=args.port,
-        encoding=args.encoding
+        encoding=args.encoding,
+        delay=delay,
+        jitter=0.0,
     )
 
     queries = sim.generate_queries(payload)
