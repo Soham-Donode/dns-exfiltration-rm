@@ -1,27 +1,17 @@
-# Networking & Packet Processing
-scapy==2.5.0
+# Core (everything in src/ and notebooks 02-05; all preinstalled on Google Colab)
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+joblib>=1.3
 
-# Data Manipulation & Numerical Computing
-pandas==2.1.4
-numpy==1.26.2
+# Notebook 01 (CSV audit) plots
+matplotlib>=3.7
 
-# Machine Learning & Modeling
-scikit-learn==1.4.0
-xgboost==2.0.3
-lightgbm>=4.0.0
-joblib>=1.3.0
-imbalanced-learn
-shap
+# Running / building notebooks locally
+jupyter>=1.0
+nbformat>=5.9
+nbclient>=0.9
+ipykernel>=6.25
 
-# Configuration & Utilities
-pyyaml==6.0.1
-dnspython==2.4.2
-requests>=2.31.0
-tldextract>=5.1.0
-tqdm>=4.66.0
-
-# Data Visualization & Notebooks
-matplotlib==3.8.2
-seaborn==0.13.0
-jupyter>=1.0.0
-ipykernel>=6.25.0
+# Optional: only for sending live packets with src/dns_simulator.py (not needed for the experiments)
+# scapy>=2.5

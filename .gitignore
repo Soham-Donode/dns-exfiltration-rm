@@ -1,49 +1,38 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
+.ipynb_checkpoints/
 
 # Virtual environments
-env/
-venv/
 .venv/
-ENV/
+venv/
+env/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
-# Data directories (keep structure via .gitkeep)
+# Data (downloaded datasets and everything generated from them)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-
-# PCAPs, captures, and datasets
+data/CSVs/
+data/*.csv
+data/Scenarios.txt
 *.pcap
 *.pcapng
 *.cap
-*.csv
-*.tsv
-*.parquet
-*.tar.gz
 *.zip
-*.7z
+*.parquet
+*.pkl
 
-# Model artifacts and checkpoints (keep structure via .gitkeep)
-models/*
-!models/.gitkeep
+# Notebook outputs and run artefacts
+results/*
+!results/.gitkeep
+notebooks/*.py
 
-# Logs & temp files
-logs/
-*.log
+# Base paper PDF (ACM copyright - keep it local)
+docs/*.pdf
 
-# OS & Editor specific files
-.DS_Store
+# Editors / OS
 .vscode/
 .idea/
+.DS_Store
 *.swp
-*.swo
-*~
